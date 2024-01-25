@@ -1,7 +1,6 @@
 export type SafeFetchParams = Parameters<typeof fetch>;
 
-type SafeFetchResult<T, U> = Promise<{
-  headers: Headers;
+type SafeFetchResult<T, U> = Promise<Response & {
   json: () => Promise<T | U>;
 }>;
 

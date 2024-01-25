@@ -7,7 +7,7 @@ type Props = {
 export default function Error({ error }: Props) {
   return (
     <>
-      <div>エラーが発生しました</div>
+      <div>システムエラーが発生しました</div>
       <div>{error.message}</div>
     </>
   );

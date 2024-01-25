@@ -1,16 +1,16 @@
 import { safeFetch, SafeFetchParams } from './safeFetch';
+import {ErrorResponse} from "@/types";
 
-export function fetchWithHandling<T extends object>(...args: SafeFetchParams): Promise<T> {
+export function fetchWithHandling<T extends object, U extends ErrorResponse = ErrorResponse>(...args: SafeFetchParams): Promise<T | U> {
   const [url, init] = args;
 
   return (
-    safeFetch<T, any>(url, init)
+    safeFetch<T, U>(url, init)
       // NOTE: ネットワークエラーは前段で処理する
       .catch((error) => {
-        console.error(error);
         throw new Error(error);
       })
-      // NOTE: レスポンスを処理する
+      // NOTE: レスポンスを返却する
       .then((result) => result.json())
   );
 }

@@ -1,11 +1,11 @@
-import {fetchWithHandling} from "@/lib";
+import {fetchWithHandling, isErrorResponse} from "@/lib";
 import {cookies} from "next/headers";
 
 export default async function Page() {
   const cookieStore = cookies();
   const session = cookieStore.get('session');
 
-  const response = await fetchWithHandling<{ message: string}>(`${process.env.NEXT_PUBLIC_API_URL}/protect`, {
+  const response = await fetchWithHandling<{ message: string }>(`${process.env.NEXT_PUBLIC_API_URL}/protect`, {
     headers: {
       'Content-Type': 'application/json',
       cookie: `${session?.name}=${session?.value}`,
@@ -19,7 +19,9 @@ export default async function Page() {
   return (
     <>
       <h1>HOME</h1>
-      <div>{response.message}</div>
+      <div>
+        {isErrorResponse(response) ? response.error.message : response.message}
+      </div>
     </>
   );
 }
