@@ -1,7 +1,7 @@
 import { safeFetch, SafeFetchParams } from './safeFetch';
-import {ErrorResponse} from "@/types";
+import {ErrorResponseBody} from "@/types";
 
-export function fetchWithHandling<T extends object, U extends ErrorResponse = ErrorResponse>(...args: SafeFetchParams): Promise<T | U> {
+export function fetchWithHandling<T extends object, U extends ErrorResponseBody = ErrorResponseBody>(...args: SafeFetchParams): Promise<T | U> {
   const [url, init] = args;
 
   return (

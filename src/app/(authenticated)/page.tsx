@@ -1,4 +1,4 @@
-import {fetchWithHandling, isErrorResponse} from "@/lib";
+import {fetchWithHandling, isErrorResponseBody} from "@/lib";
 import {cookies} from "next/headers";
 
 export default async function Page() {
@@ -20,7 +20,7 @@ export default async function Page() {
     <>
       <h1>HOME</h1>
       <div>
-        {isErrorResponse(response) ? response.error.message : response.message}
+        {isErrorResponseBody(response) ? response.error.message : response.message}
       </div>
     </>
   );

@@ -1,7 +1,7 @@
 /**
  * エラー内容を含んだレスポンス
  */
-export type ErrorResponse = {
+export type ErrorResponseBody = {
   error: {
     message: string;
   };

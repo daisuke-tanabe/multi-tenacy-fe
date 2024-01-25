@@ -10,12 +10,14 @@ export const config = {
 export default async function middleware(request: NextRequest) {
   const { next, redirect } = NextResponse;
   const { pathname } = request.nextUrl;
-  const isFromSignin = pathname === '/signin';
+  const isFromSignIn = pathname === '/signin';
+  const isFromSignUp = pathname === '/signup';
+  const isMFA = pathname === '/mfa';
 
   const session = request.cookies.get('session');
 
   if (!session) {
-    if (!isFromSignin) return redirect(new URL('/signin', process.env.NEXT_PUBLIC_SITE_URL));
+    if (!isFromSignUp && !isFromSignIn && !isMFA) return redirect(new URL('/signin', process.env.NEXT_PUBLIC_SITE_URL));
     return next();
   }
 
@@ -33,7 +35,7 @@ export default async function middleware(request: NextRequest) {
     await verifier.verify(jwt);
 
     // トークンが有効ならサインインしていてもトップ画面に戻せるようにしておく
-    if (isFromSignin) return redirect(new URL('/', process.env.NEXT_PUBLIC_SITE_URL));
+    if (isFromSignIn) return redirect(new URL('/', process.env.NEXT_PUBLIC_SITE_URL));
   } catch {
     // これのやっている意図は特定のURLはトークン検証をしなくても見えるようにしたいから
     const whiteListPathNames = ['/signin', '/signup'];
