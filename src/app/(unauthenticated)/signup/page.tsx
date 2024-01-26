@@ -146,7 +146,7 @@ export default function Page() {
         const response = await fetchWithHandling<{
           session?: string;
           secretCode?: string;
-        }>(`${process.env.NEXT_PUBLIC_API_URL}/auth/mfa`, {
+        }>(`${process.env.NEXT_PUBLIC_API_URL}/auth/mfa-setup`, {
           headers: {
             'Content-Type': 'application/json',
           },

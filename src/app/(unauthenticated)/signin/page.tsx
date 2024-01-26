@@ -8,7 +8,7 @@ import {fetchWithHandling, isErrorResponseBody} from "@/lib";
 
 type ChallengeName = 'MFA_SETUP' | 'SOFTWARE_TOKEN_MFA' | 'COMPLETE';
 
-type SignInResponseBody = {
+type ResponseBody = {
   nextStep?: ChallengeName;
   session?: string;
 };
@@ -30,8 +30,6 @@ export default function Page() {
   const [nextStep, setNextStep] = useState<ChallengeName | undefined>(undefined);
   const [session, sesSession] = useState<string | undefined>(undefined);
 
-  const [qrCodeUrl, setQrCodeUrl] = useState<string | undefined>(undefined);
-
   const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.name === 'username') setTenantId(event.target.value);
     if (event.target.name === 'email') setEmail(event.target.value);
@@ -39,11 +37,11 @@ export default function Page() {
     if (event.target.name === 'mfacode') setMfaCode(event.target.value);
   };
 
-  const handleAuthSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleSignInSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     try {
-      const response = await fetchWithHandling<SignInResponseBody>(`${process.env.NEXT_PUBLIC_API_URL}/auth/signin`, {
+      const response = await fetchWithHandling<ResponseBody>(`${process.env.NEXT_PUBLIC_API_URL}/auth/signin`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -69,11 +67,11 @@ export default function Page() {
     }
   }
 
-  const handleMfaSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleMfaVerifySubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     try {
-      const response = await fetchWithHandling<ChallengeResponseBody>(`${process.env.NEXT_PUBLIC_API_URL}/auth/mfa-verification`, {
+      const response = await fetchWithHandling<ResponseBody>(`${process.env.NEXT_PUBLIC_API_URL}/auth/software-token-mfa`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -84,9 +82,8 @@ export default function Page() {
           tenantId,
           email,
           password,
-          mfaCode,
           session,
-          nextStep
+          mfaCode,
         })
       });
 
@@ -96,54 +93,30 @@ export default function Page() {
       }
 
       setNextStep(response.nextStep);
-      sesSession(undefined);
-
-      const url = new URL(decodeURIComponent(document.location.href));
-      const callbackUrl = url.searchParams.get('callbackUrl') || '/';
-      router.push(callbackUrl);
+      sesSession(response.session);
     } catch (error: unknown) {
-      console.log(error);
+      console.error(error);
     }
   }
 
   useEffect(() => {
-    (async () => {
-      if (nextStep === 'MFA_SETUP') {
-        const response = await fetchWithHandling<{
-          session?: string;
-          secretCode?: string;
-        }>(`${process.env.NEXT_PUBLIC_API_URL}/auth/mfa`, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          method: 'POST',
-          credentials: 'include',
-          mode: 'cors',
-          body: JSON.stringify({
-            session
-          })
-        });
-
-        if (isErrorResponseBody(response)) {
-          setErrorMessage(response.error.message);
-          return;
-        }
-
-        setQrCodeUrl(`otpauth://totp/${email}?secret=${response.secretCode}`)
-        sesSession(response.session);
-      }
-    })();
-  }, [nextStep]);
+    // TODO なぜかリダイレクトされない？
+    if (nextStep === 'COMPLETE') {
+      router.push('/');
+    }
+  }, []);
 
   return (
     <div>
-      <h1>SignIn</h1>
+      <h1>SignUp</h1>
+      <div>Step: {nextStep ?? 'USER_PASSWORD_AUTH'}</div>
+
       { errorMessage && <div style={{color:'red'}}>ERROR: {errorMessage}</div>}
 
-      { !nextStep && (
+      {
+        !nextStep && (
           <div>
-            <h2>1. Auth</h2>
-            <form onSubmit={handleAuthSubmit}>
+            <form onSubmit={handleSignInSubmit}>
               <div>
                 tenant_id: <input type="text" name="username" value={tenantId} onChange={handleChange} />
               </div>
@@ -152,24 +125,6 @@ export default function Page() {
               </div>
               <div>
                 password: <input type="password" name="password" value={password} onChange={handleChange} />
-              </div>
-
-              <div>
-                <button type="submit" value="submit">Submit</button>
-              </div>
-            </form>
-          </div>
-        )
-      }
-
-      {
-        nextStep === 'MFA_SETUP' && qrCodeUrl && (
-          <div>
-            <h2>2. MFA Setup</h2>
-            <QRCodeSVG value={qrCodeUrl} />
-            <form onSubmit={handleMfaSubmit}>
-              <div>
-                mfa_code: <input type="text" name="mfacode" value={mfaCode} onChange={handleChange} />
               </div>
               <div>
                 <button type="submit" value="submit">Submit</button>
@@ -182,8 +137,7 @@ export default function Page() {
       {
         nextStep === 'SOFTWARE_TOKEN_MFA' && (
           <div>
-            <h2>3. MFA</h2>
-            <form onSubmit={handleMfaSubmit}>
+            <form onSubmit={handleMfaVerifySubmit}>
               <div>
                 mfa_code: <input type="text" name="mfacode" value={mfaCode} onChange={handleChange} />
               </div>
@@ -198,7 +152,6 @@ export default function Page() {
       {
         nextStep === 'COMPLETE' && (
           <div>
-            <h2>3. Complete</h2>
             <div>ホームにリダイレクトします</div>
           </div>
         )
