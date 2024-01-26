@@ -139,7 +139,7 @@ export default function Page() {
   }
 
   useEffect(() => {
-    if (nextStep === 'SUCCESS') {
+    if (nextStep === 'SOFTWARE_TOKEN_MFA') {
       router.push('/signin');
     }
 
@@ -236,6 +236,18 @@ export default function Page() {
       }
 
       {
+        nextStep === 'SOFTWARE_TOKEN_MFA' && (
+          <div>
+            <div>サインインページにリダイレクトします</div>
+            <ul>
+              <li>初回パスワード変更済み</li>
+              <li>認証アプリケーション登録済み</li>
+            </ul>
+          </div>
+        )
+      }
+
+      {
         nextStep === 'SUCCESS' && (
           <div>
             <div>ソフトウェア登録完了</div>
@@ -247,18 +259,6 @@ export default function Page() {
         nextStep === 'ERROR' && (
           <div>
             <div>認証フロー失敗</div>
-          </div>
-        )
-      }
-
-      {
-        nextStep === 'SOFTWARE_TOKEN_MFA' && (
-          <div>
-            <div>サインインページにリダイレクトします</div>
-            <ul>
-              <li>初回パスワード変更済み</li>
-              <li>認証アプリケーション登録済み</li>
-            </ul>
           </div>
         )
       }

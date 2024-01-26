@@ -2,20 +2,15 @@
 
 import { useRouter } from 'next/navigation';
 import {ChangeEvent, FormEvent, useEffect, useState} from "react";
-import {QRCodeSVG} from 'qrcode.react';
 
 import {fetchWithHandling, isErrorResponseBody} from "@/lib";
 
-type ChallengeName = 'MFA_SETUP' | 'SOFTWARE_TOKEN_MFA' | 'SUCCESS';
+type ChallengeName = 'MFA_SETUP' | 'SOFTWARE_TOKEN_MFA' | 'SUCCESS' | 'ERROR';
 
 type ResponseBody = {
   nextStep?: ChallengeName;
   session?: string;
 };
-
-type ChallengeResponseBody = {
-  nextStep?: ChallengeName;
-}
 
 export default function Page() {
   const router = useRouter();
@@ -83,7 +78,6 @@ export default function Page() {
         body: JSON.stringify({
           tenantId,
           email,
-          password,
           session,
           mfaCode,
         })
@@ -91,6 +85,12 @@ export default function Page() {
 
       if (isErrorResponseBody(response)) {
         setErrorMessage(response.error.message);
+        // セッション認証がきれた場合
+        if (response.error.name === 'NotAuthorizedException') {
+          sesSession(undefined);
+          setNextStep(undefined);
+          setMfaCode('')
+        }
         return;
       }
 
@@ -110,7 +110,7 @@ export default function Page() {
 
   return (
     <div>
-      <h1>SignUp</h1>
+      <h1>SignIn</h1>
       <div>Step: {nextStep ?? 'USER_PASSWORD_AUTH'}</div>
 
       { errorMessage && <div style={{color:'red'}}>ERROR: {errorMessage}</div>}
@@ -155,6 +155,14 @@ export default function Page() {
         nextStep === 'SUCCESS' && (
           <div>
             <div>ホームにリダイレクトします</div>
+          </div>
+        )
+      }
+
+      {
+        nextStep === 'ERROR' && (
+          <div>
+            <div>認証フロー失敗</div>
           </div>
         )
       }
