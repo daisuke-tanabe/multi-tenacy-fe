@@ -6,7 +6,7 @@ import {QRCodeSVG} from 'qrcode.react';
 
 import {fetchWithHandling, isErrorResponseBody} from "@/lib";
 
-type ChallengeName = 'MFA_SETUP' | 'SOFTWARE_TOKEN_MFA' | 'COMPLETE';
+type ChallengeName = 'MFA_SETUP' | 'SOFTWARE_TOKEN_MFA' | 'SUCCESS';
 
 type ResponseBody = {
   nextStep?: ChallengeName;
@@ -39,6 +39,7 @@ export default function Page() {
 
   const handleSignInSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setErrorMessage(undefined);
 
     try {
       const response = await fetchWithHandling<ResponseBody>(`${process.env.NEXT_PUBLIC_API_URL}/auth/signin`, {
@@ -69,6 +70,7 @@ export default function Page() {
 
   const handleMfaVerifySubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setErrorMessage(undefined);
 
     try {
       const response = await fetchWithHandling<ResponseBody>(`${process.env.NEXT_PUBLIC_API_URL}/auth/software-token-mfa`, {
@@ -101,10 +103,10 @@ export default function Page() {
 
   useEffect(() => {
     // TODO なぜかリダイレクトされない？
-    if (nextStep === 'COMPLETE') {
+    if (nextStep === 'SUCCESS') {
       router.push('/');
     }
-  }, []);
+  }, [nextStep]);
 
   return (
     <div>
@@ -150,7 +152,7 @@ export default function Page() {
       }
 
       {
-        nextStep === 'COMPLETE' && (
+        nextStep === 'SUCCESS' && (
           <div>
             <div>ホームにリダイレクトします</div>
           </div>

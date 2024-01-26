@@ -29,7 +29,7 @@ export default function Page() {
   const [confirmationPassword, setConfirmationPassword] = useState("");
   const [mfaCode, setMfaCode] = useState('');
 
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined);
 
   const [nextStep, setNextStep] = useState<ChallengeName | undefined>(undefined);
   const [session, setSession] = useState<string | undefined>(undefined);
@@ -46,6 +46,7 @@ export default function Page() {
 
   const handleChangePasswordSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setErrorMessage(undefined);
 
     try {
       const response = await fetchWithHandling<ResponseBody>(`${process.env.NEXT_PUBLIC_API_URL}/auth/force-change-password`, {
@@ -77,6 +78,7 @@ export default function Page() {
 
   const handleNewPasswordSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setErrorMessage(undefined);
 
     try {
       const response = await fetchWithHandling<ResponseBody>(`${process.env.NEXT_PUBLIC_API_URL}/auth/new-password-required`, {
@@ -106,11 +108,12 @@ export default function Page() {
     }
   }
 
-  const handleMfaSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleMfaVerifySubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setErrorMessage(undefined);
 
     try {
-      const response = await fetchWithHandling<ResponseBody>(`${process.env.NEXT_PUBLIC_API_URL}/auth/mfa-setup`, {
+      const response = await fetchWithHandling<ResponseBody>(`${process.env.NEXT_PUBLIC_API_URL}/auth/mfa-verify`, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -120,7 +123,6 @@ export default function Page() {
         body: JSON.stringify({
           mfaCode,
           session,
-          nextStep
         })
       });
 
@@ -137,12 +139,14 @@ export default function Page() {
   }
 
   useEffect(() => {
-    if (nextStep === 'SOFTWARE_TOKEN_MFA') {
+    if (nextStep === 'SUCCESS') {
       router.push('/signin');
     }
 
     (async () => {
       if (nextStep === 'MFA_SETUP') {
+        setErrorMessage(undefined);
+
         const response = await fetchWithHandling<{
           session?: string;
           secretCode?: string;
@@ -219,7 +223,7 @@ export default function Page() {
         nextStep === 'MFA_SETUP' && qrCodeUrl && (
           <div>
             <QRCodeSVG value={qrCodeUrl} />
-            <form onSubmit={handleMfaSubmit}>
+            <form onSubmit={handleMfaVerifySubmit}>
               <div>
                 mfa_code: <input type="text" name="mfacode" value={mfaCode} onChange={handleChange} />
               </div>
